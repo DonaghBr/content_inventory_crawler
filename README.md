@@ -9,6 +9,7 @@ Crawls a Red Hat documentation product page and generates a CSV content inventor
 3. Finds all guide links within each category
 4. Fetches each guide and extracts every heading (h1-h6) with its HTML anchor ID
 5. Writes a CSV with the hierarchical structure mapped to columns
+6. To view the CSV, just upload in your Google Drive, and open it in Google Sheets
 
 ## Setup
 
@@ -40,7 +41,9 @@ python crawl_content_inventory.py \
   "https://docs.redhat.com/en/documentation/red_hat_ai_inference_server/3.2" \
   --delay 0.5
 ```
-
+## CSV in Output folder - open in Google Sheets
+For best results to view the CSV file, upload the CSV file from the 'output' directory to Google Drive and open using the Google Sheets app. 
+ 
 ## CSV Output Format
 
 | Column | Source | Example |
