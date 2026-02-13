@@ -9,7 +9,6 @@ Crawls a Red Hat documentation product page and generates a CSV content inventor
 3. Finds all guide links within each category
 4. Fetches each guide and extracts every heading (h1-h6) with its HTML anchor ID
 5. Writes a CSV with the hierarchical structure mapped to columns
-6. To view the CSV, just upload in your Google Drive, and open it in Google Sheets
 
 ## Setup
 
@@ -41,9 +40,7 @@ python crawl_content_inventory.py \
   "https://docs.redhat.com/en/documentation/red_hat_ai_inference_server/3.2" \
   --delay 0.5
 ```
-## CSV in Output folder - open in Google Sheets
-For best results to view the CSV file, upload the CSV file from the 'output' directory to Google Drive and open using the Google Sheets app. 
- 
+
 ## CSV Output Format
 
 | Column | Source | Example |
@@ -75,6 +72,37 @@ Administer,Creating a workbench,,,...,https://docs.redhat.com/.../creating_a_wor
 ...
 ```
 
+## Filtering
+
+You can filter the crawl output by category, title, or chapter to produce a CSV for just the sections you care about. All filters use case-insensitive substring matching. Multiple values for the same flag are OR'd; filters across different flags are AND'd.
+
+Each filter value requires its own flag. Partial words work — `--category "Admin"` matches "Administer".
+
+```bash
+URL="https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.2"
+
+# Single category
+python crawl_content_inventory.py "$URL" --category "Get started"
+
+# Multiple categories (each needs its own --category flag)
+python crawl_content_inventory.py "$URL" --category "Administer" --category "Develop"
+
+# Specific guide by title
+python crawl_content_inventory.py "$URL" --title "Release notes"
+
+# Multiple titles
+python crawl_content_inventory.py "$URL" --title "Release notes" --title "workbench"
+
+# Category + title (AND'd — must match both)
+python crawl_content_inventory.py "$URL" --category "Administer" --title "workbench"
+
+# Category + chapter (only chapters mentioning "deploying" within "Deploy" guides)
+python crawl_content_inventory.py "$URL" --category "Deploy" --chapter "deploying"
+
+# Partial, case-insensitive match
+python crawl_content_inventory.py "$URL" --category "admin"
+```
+
 ## Options
 
 | Flag | Description | Default |
@@ -83,6 +111,9 @@ Administer,Creating a workbench,,,...,https://docs.redhat.com/.../creating_a_wor
 | `--output`, `-o` | Output CSV file path | `output/<product>_content_inventory.csv` |
 | `--limit`, `-l` | Max number of guides to fetch (0 = all) | 0 |
 | `--delay` | Seconds between page fetches | 1.0 |
+| `--category` | Filter by category (repeatable, case-insensitive substring) | -- |
+| `--title` | Filter by guide title (repeatable, case-insensitive substring) | -- |
+| `--chapter` | Filter by chapter/h2 heading (repeatable, case-insensitive substring) | -- |
 
 ## How It Works
 

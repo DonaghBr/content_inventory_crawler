@@ -71,6 +71,35 @@ BOILERPLATE_SUFFIXES = [
 ]
 
 
+def filter_guides(guides, categories=None, titles=None):
+    """Filter guides by category and/or title (case-insensitive substring)."""
+    filtered = guides
+    if categories:
+        cats_lower = [c.lower() for c in categories]
+        filtered = [g for g in filtered
+                    if any(c in g["category"].lower() for c in cats_lower)]
+    if titles:
+        titles_lower = [t.lower() for t in titles]
+        filtered = [g for g in filtered
+                    if any(t in g["title"].lower() for t in titles_lower)]
+    return filtered
+
+
+def filter_headings(headings, chapters=None):
+    """Filter headings to only include matching h2 chapters and their children."""
+    if not chapters:
+        return headings
+    chaps_lower = [c.lower() for c in chapters]
+    filtered = []
+    include_children = False
+    for h in headings:
+        if h["level"] == 2:
+            include_children = any(c in h["text"].lower() for c in chaps_lower)
+        if include_children:
+            filtered.append(h)
+    return filtered
+
+
 def clean_heading_text(text: str) -> str:
     """Strip Red Hat docs boilerplate suffixes from heading text."""
     text = " ".join(text.split())
@@ -322,6 +351,24 @@ def main():
         default=1.0,
         help="Delay in seconds between page fetches (default: 1.0)",
     )
+    parser.add_argument(
+        "--category",
+        action="append",
+        default=None,
+        help="Filter by category (case-insensitive substring, repeatable)",
+    )
+    parser.add_argument(
+        "--title",
+        action="append",
+        default=None,
+        help="Filter by guide title (case-insensitive substring, repeatable)",
+    )
+    parser.add_argument(
+        "--chapter",
+        action="append",
+        default=None,
+        help="Filter by chapter heading (case-insensitive substring, repeatable)",
+    )
 
     args = parser.parse_args()
 
@@ -336,6 +383,16 @@ def main():
     guides = fetch_landing_page(args.base_url)
     print(f"Found {len(guides)} guides across categories")
 
+    # Apply category/title filters before limit
+    if args.category or args.title:
+        guides = filter_guides(guides, args.category, args.title)
+        print(f"Filtered to {len(guides)} guides", end="")
+        if args.category:
+            print(f" (category: {', '.join(args.category)})", end="")
+        if args.title:
+            print(f" (title: {', '.join(args.title)})", end="")
+        print()
+
     if args.limit > 0:
         guides = guides[: args.limit]
         print(f"Limited to first {args.limit} guides")
@@ -344,6 +401,8 @@ def main():
     for i, guide in enumerate(guides, 1):
         print(f"[{i}/{len(guides)}] {guide['title'][:60]}...")
         guide["headings"] = fetch_guide_headings(guide["url"])
+        if args.chapter:
+            guide["headings"] = filter_headings(guide["headings"], args.chapter)
         heading_count = len(guide["headings"])
         print(f"  {heading_count} headings extracted")
 
