@@ -12,13 +12,21 @@ Crawls a Red Hat documentation product page and generates a CSV content inventor
 
 ## Setup
 
+1. Create a directory on your local drive
+2. Clone the repo into that directory
+3. CD into the code directory
+4. Create the python virtual environment below
+
 ```bash
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate       # macOS/Linux
 pip install -r requirements.txt
 ```
 
 ## Usage
+
+5. Go to the product docs splash page and copy the url that you want.
+6. Follow usage examples below, depending on your requirements, using the url from your splash page. 
 
 ```bash
 # Basic usage (output goes to output/<product>_content_inventory.csv)
