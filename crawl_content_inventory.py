@@ -198,6 +198,12 @@ def find_anchor(h) -> str:
         inner_a = h.find("a", id=True) or h.find("a", attrs={"name": True})
         if inner_a:
             anchor = inner_a.get("id") or inner_a.get("name", "")
+    if not anchor:
+        inner_a = h.find("a", href=True)
+        if inner_a:
+            href = inner_a.get("href", "")
+            if href.startswith("#"):
+                anchor = href[1:]
     return anchor
 
 
