@@ -125,7 +125,8 @@ python crawl_content_inventory.py "$URL" --category "admin"
 
 ## How It Works
 
-- Uses `requests` + `BeautifulSoup` (no browser or JavaScript rendering needed -- Red Hat docs are server-rendered)
+- Uses `curl_cffi` + `BeautifulSoup` (no browser or JavaScript rendering needed -- Red Hat docs are server-rendered)
+- `docs.redhat.com` blocks plain `python-requests` on its TLS fingerprint (403 regardless of headers); `curl_cffi` impersonates a real browser's TLS fingerprint (`impersonate="chrome"`) to get through. Bump `BROWSER_IMPERSONATE` if Red Hat changes their block
 - Landing page categories are extracted from `<h2>` headings and their parent containers
 - Guide URLs are converted from `/html/` to `/html-single/` to get the full guide on one page
 - Headings are extracted from the `<article>` content area, skipping navigation and footer elements
