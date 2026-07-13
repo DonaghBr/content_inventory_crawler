@@ -22,29 +22,17 @@ import time
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
-import requests
+from curl_cffi import requests
 from bs4 import BeautifulSoup
 
 # Resolve paths relative to this script's directory
 SCRIPT_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = SCRIPT_DIR / "output"
 
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/136.0.0.0 Safari/537.36"
-    ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.5",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Connection": "keep-alive",
-    "Upgrade-Insecure-Requests": "1",
-    "Sec-Fetch-Dest": "document",
-    "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "none",
-    "Sec-Fetch-User": "?1",
-}
+# docs.redhat.com blocks python-requests on its TLS fingerprint, returning 403
+# regardless of headers. curl_cffi impersonates a real browser's TLS/JA3
+# fingerprint, which gets through. Bump this if Red Hat changes their block.
+BROWSER_IMPERSONATE = "chrome"
 
 CSV_COLUMNS = [
     "Category",
@@ -135,7 +123,7 @@ def fetch_landing_page(base_url: str) -> list[dict]:
     Returns a list of dicts: [{category, title, url}, ...]
     """
     base_url = base_url.rstrip("/")
-    response = requests.get(base_url, headers=HEADERS, timeout=30)
+    response = requests.get(base_url, impersonate=BROWSER_IMPERSONATE, timeout=30)
     response.raise_for_status()
 
     soup = BeautifulSoup(response.text, "html.parser")
@@ -214,9 +202,9 @@ def fetch_guide_headings(url: str) -> list[dict]:
     Returns a list of dicts: [{level, text, anchor, url}, ...]
     """
     try:
-        response = requests.get(url, headers=HEADERS, timeout=60)
+        response = requests.get(url, impersonate=BROWSER_IMPERSONATE, timeout=60)
         response.raise_for_status()
-    except requests.RequestException as e:
+    except requests.exceptions.RequestException as e:
         print(f"  Failed to fetch: {e}", file=sys.stderr)
         return []
 
